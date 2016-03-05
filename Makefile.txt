@@ -1,0 +1,19 @@
+all: master
+
+master: master.c command-line-options.o ibarland-utils.o
+	gcc -Wall -Wextra master.c command-line-options.o ibarland-utils.o -o master -lm
+
+command-line-options.o: command-line-options.c command-line-options.h ibarland-utils.o
+	gcc -Wall -Wextra -c command-line-options.c
+
+ibarland-utils.o: ibarland-utils.c ibarland-utils.h
+	gcc -Wall -Wextra -c ibarland-utils.c
+
+command-line-options-test: command-line-options.c command-line-options.h ibarland-utils.o
+	gcc -Wall -Wextra command-line-options-test.c -o command-line-options-test ibarland-utils.o -lm
+
+test: command-line-options-test
+	command-line-options-test
+
+clean:
+	rm -f  *.o  master  command-line-options-test
