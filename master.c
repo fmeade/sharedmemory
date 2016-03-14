@@ -28,8 +28,9 @@
  *    (If the .o file doesn't exist, create it by compiling with -c:)
  *       gcc -Wall -c command-line-options.c
  * 
- * Description: 
- * 
+ * Description: Write a program which forks two child processes which communicate via shared memory. 
+ *              One child (the producer) will add elements to a circular queue, and the other child 
+ *              (the consumer) will process them.
  */
 
 /* The possible command-line options to a program. 
