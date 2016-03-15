@@ -1,8 +1,5 @@
 all: master producer consumer
 
-run: master
-	master --queue-size 3 --produce-time 100 --consume-time 75 --duration 1000
-
 master: master.c producer consumer ibarland-utils.o command-line-options.o
 	gcc -Wall master.c -o master ibarland-utils.o command-line-options.o -lm
 
@@ -20,3 +17,6 @@ ibarland-utils.o: ibarland-utils.c ibarland-utils.h
 
 clean:
 	rm -f master producer consumer *.o
+
+run: master
+	master --queue-size 3 --produce-time 100 --consume-time 75 --duration 1000
