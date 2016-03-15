@@ -19,14 +19,6 @@
  * Project 2 - Producer/Consumer via Shared Memory
  * Due: March 16, 2016 @ 11:59p
  * Author: Forrest Meade (fmeade)
- *
- * How to compile/run: 
- *    Compile this file with
- *       gcc -Wall master.c command-line-options.o ibarland-utils.o -o master -lm
- *       ./master ...
- *
- *    (If the .o file doesn't exist, create it by compiling with -c:)
- *       gcc -Wall -c command-line-options.c
  * 
  * Description: Write a program which forks two child processes which communicate via shared memory. 
  *              One child (the producer) will add elements to a circular queue, and the other child 
@@ -52,7 +44,7 @@ int main(int argc, char** argv) {
     // either taken from the command-line, or from the default given in `options[]`.
 
     unsigned int i;
-    for (i=0;  i<NUM_OPTIONS;  ++i) {
+    for (i = 0;  i < NUM_OPTIONS; i++) {
         printf("Option #%d (%s) is \"%s\".\n", i, options[i].longOption, settings[i] );
     }
 
