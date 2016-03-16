@@ -43,13 +43,7 @@ int main(int argc, char** argv) {
     // Now, the array `settings` contains all the options, in order:
     // either taken from the command-line, or from the default given in `options[]`.
 
-    unsigned int i;
-    for (i = 0;  i < NUM_OPTIONS; i++) {
-        printf("Option #%d (%s) is \"%s\".\n", i, options[i].longOption, settings[i] );
-    }
-
-    // Got stuck and ran out of time.. just starting to understand the steps.
-    // Sorry I dont have more done.
+    
 
 	return 0;
 }
