@@ -63,7 +63,6 @@ int main(int argc, char** argv) {
     const char *name = "fmeade-shm"; 
     const int SIZE = (4 + atoi(settings[1])) * sizeof(int);
 
-
     int shm_fd;
     void *ptr;
 
@@ -84,22 +83,17 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    /* put options into shared memory */
     sprintf(ptr, "%d", atoi(settings[1]));
-
-
     sprintf(ptr, "%d", atoi(settings[2]));
-
-
     sprintf(ptr, "%d", atoi(settings[3]));
-
-
     sprintf(ptr, "%d", atoi(settings[4]));
 
 
+    /* add circular queue to shared memory */
 
-    //circular queue
 
-
+    /* fork producer process */
     pid_t producer = fork();
 
     if(producer < 0) {
@@ -107,38 +101,32 @@ int main(int argc, char** argv) {
         return producer;
     }
     else if(producer == 0) {
-        execl("./producer", ptr, NULL);
+        printf("%s\n", "master  : started producer");
+        execl("./producer", name, intToString(SIZE), NULL);
     }
 
-    printf("%s\n", "master  : started producer");
 
-
+    /* fork consumer process */
     pid_t consumer = fork();
 
     if(consumer < 0) {
         fprintf(stderr, "fork failed\n");
         return consumer;
     }
-    else if(consumer == 0) {
-        execl("./consumer", ptr, NULL);
+    else if(consumer == 0 && producer != 0) {
+        printf("%s\n", "master  : started consumer");
+        execl("./consumer", name, intToString(SIZE), NULL);
     }
-
-    printf("%s\n", "master  : started consumer");
 
 
 
     sleep(atoi(settings[0])/1000); // ms to s
 
-    kill(producer, SIGTERM);
-    kill(consumer, SIGTERM);
-
-    printf("%s\n", "master  : terminating processes; bye!");
-
-    /* remove the shared memory segment */
-    if (shm_unlink(name) == -1) {
-        printf("Error removing %s\n",name);
-        exit(-1);
-        }
+    if(producer == 0 && consumer == 0) {
+        printf("%s\n", "master  : terminating processes; bye!");
+        kill(producer, SIGTERM);
+        kill(consumer, SIGTERM);
+    }
 
     return 0;
 }
