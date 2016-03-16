@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -23,8 +24,15 @@
  * Description: Write a program which forks two child processes which communicate via shared memory. 
  *              One child (the producer) will add elements to a circular queue, and the other child 
  *              (the consumer) will process them.
+ * 
+ * Shared memory -- all ints, so I'll declare it as  `int* shm`:
+ *    This memory will be init'd by the master process, for the children to use:
+ *      shm[0]: queue-size
+ *      shm[1]: produce-time
+ *      shm[2]: consume-time
+ *      shm[3]: seed
+ *      shm[4]: queue-start
  */
-
 
 /* The possible command-line options to the program. 
  */
@@ -33,19 +41,28 @@ struct option_info options[] =
     ,{ "queue-size",  'q',  "10", "The size of the cookie-queue." } 
     ,{ "produce-time",  'p',  "1000", "The maximum time required to produce an item, in ms." }
     ,{ "consume-time", 'c', "1000", "The maximum time required to consume an item, in ms." }
-    ,{ "seed", 's', "1", "The random-number seed for the simulation." }
+    ,{ "seed", 's', NULL, "The random-number seed for the simulation." }
   };
 
 #define NUM_OPTIONS SIZEOF_ARRAY(options)
 
 
-  int main(int argc, char** argv) {
+int main(int argc, char** argv) {
     char** settings = allOptions( argc, argv, NUM_OPTIONS, options );
     // Now, the array `settings` contains all the options, in order:
     // either taken from the command-line, or from the default given in `options[]`.
 
-    const int SIZE = atoi(settings[1]);
-    const char *name = "fmeade-shm"; // Name yours different from any other student!
+    // generates a random number for the seed if not provided
+    srandom(time(0));
+    if (settings[4] == NULL)
+        settings[4] = intToString(random());
+        //Now, the seed is a random integer
+
+
+    // name and size of shared memory
+    const char *name = "fmeade-shm"; 
+    const int SIZE = (4 + atoi(settings[1])) * sizeof(int);
+
 
     int shm_fd;
     void *ptr;
@@ -58,7 +75,7 @@ struct option_info options[] =
     }
 
     /* configure the size of the shared memory segment */
-    ftruncate(shm_fd,SIZE);
+    ftruncate(shm_fd, SIZE);
 
     /* now map the shared memory segment in the address space of the process */
     ptr = mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
@@ -67,8 +84,61 @@ struct option_info options[] =
         return -1;
     }
 
-    
+    sprintf(ptr, "%d", atoi(settings[1]));
 
+
+    sprintf(ptr, "%d", atoi(settings[2]));
+
+
+    sprintf(ptr, "%d", atoi(settings[3]));
+
+
+    sprintf(ptr, "%d", atoi(settings[4]));
+
+
+
+    //circular queue
+
+
+    pid_t producer = fork();
+
+    if(producer < 0) {
+        fprintf(stderr, "fork failed\n");
+        return producer;
+    }
+    else if(producer == 0) {
+        execl("./producer", ptr, NULL);
+    }
+
+    printf("%s\n", "master  : started producer");
+
+
+    pid_t consumer = fork();
+
+    if(consumer < 0) {
+        fprintf(stderr, "fork failed\n");
+        return consumer;
+    }
+    else if(consumer == 0) {
+        execl("./consumer", ptr, NULL);
+    }
+
+    printf("%s\n", "master  : started consumer");
+
+
+
+    sleep(atoi(settings[0])/1000); // ms to s
+
+    kill(producer, SIGTERM);
+    kill(consumer, SIGTERM);
+
+    printf("%s\n", "master  : terminating processes; bye!");
+
+    /* remove the shared memory segment */
+    if (shm_unlink(name) == -1) {
+        printf("Error removing %s\n",name);
+        exit(-1);
+        }
 
     return 0;
 }

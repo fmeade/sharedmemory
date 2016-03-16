@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int main() {
-  printf("I about to be a parent!\n");
+int main() {f
+  printf("I'm about to be a parent!\n");
   pid_t result = fork();
   printf("Fork completed with status %d.\n", result);
   if (result<0) {
