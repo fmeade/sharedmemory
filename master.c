@@ -25,6 +25,7 @@
  *              (the consumer) will process them.
  */
 
+
 /* The possible command-line options to the program. 
  */
 struct option_info options[] =
@@ -38,14 +39,38 @@ struct option_info options[] =
 #define NUM_OPTIONS SIZEOF_ARRAY(options)
 
 
-int main(int argc, char** argv) {
-	char** settings = allOptions( argc, argv, NUM_OPTIONS, options );
+  int main(int argc, char** argv) {
+    char** settings = allOptions( argc, argv, NUM_OPTIONS, options );
     // Now, the array `settings` contains all the options, in order:
     // either taken from the command-line, or from the default given in `options[]`.
 
+    const int SIZE = atoi(settings[1]);
+    const char *name = "fmeade-shm"; // Name yours different from any other student!
+
+    int shm_fd;
+    void *ptr;
+
+    /* create the shared memory segment */
+    shm_fd = shm_open(name, O_CREAT | O_RDWR, 0666);
+    if (shm_fd == -1) {
+        perror("creating shared memory failed\n");
+        exit(-1);
+    }
+
+    /* configure the size of the shared memory segment */
+    ftruncate(shm_fd,SIZE);
+
+    /* now map the shared memory segment in the address space of the process */
+    ptr = mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    if (ptr == MAP_FAILED) {
+        fprintf(stderr, "Map failed\n");
+        return -1;
+    }
+
     
 
-	return 0;
+
+    return 0;
 }
 
 
