@@ -25,14 +25,14 @@
  *              (the consumer) will process them.
  */
 
-/* The possible command-line options to a program. 
+/* The possible command-line options to the program. 
  */
 struct option_info options[] =
   {  { "duration",  'd',  "5000", "The length of the overall simulation, in ms." }
     ,{ "queue-size",  'q',  "10", "The size of the cookie-queue." } 
     ,{ "produce-time",  'p',  "1000", "The maximum time required to produce an item, in ms." }
     ,{ "consume-time", 'c', "1000", "The maximum time required to consume an item, in ms." }
-    ,{ "seed", 's', 0, "The random-number seed for the simulation." }
+    ,{ "seed", 's', "1", "The random-number seed for the simulation." }
   };
 
 #define NUM_OPTIONS SIZEOF_ARRAY(options)
