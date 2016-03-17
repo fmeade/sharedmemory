@@ -129,11 +129,10 @@ int main(int argc, char** argv) {
 
     sleep(atoi(settings[0])/1000); // ms to s
 
-    if(producer == 0 && consumer == 0) {
-        printf("%s\n", "master  : terminating processes; bye!");
-        kill(producer, SIGTERM);
-        kill(consumer, SIGTERM);
-    }
+
+    printf("%s\n", "master  : terminating processes; bye!");
+    kill(producer, SIGTERM);
+    kill(consumer, SIGTERM);
 
     return 0;
 }

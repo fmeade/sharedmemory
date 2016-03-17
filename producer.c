@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
         }
 
 
-    printf("%s\n", name);
+    printf("%s\n", ptr);
 
 
 
