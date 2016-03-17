@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
 
     // name and size of shared memory
     const char *name = "fmeade-shm"; 
-    const int SIZE = (4 + atoi(settings[1])) * sizeof(int);
+    const int size = (4 + atoi(settings[1])) * sizeof(int);
 
     int shm_fd;
     void *ptr;
@@ -74,20 +74,17 @@ int main(int argc, char** argv) {
     }
 
     /* configure the size of the shared memory segment */
-    ftruncate(shm_fd, SIZE);
+    ftruncate(shm_fd, size);
 
     /* now map the shared memory segment in the address space of the process */
-    ptr = mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    ptr = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (ptr == MAP_FAILED) {
         fprintf(stderr, "Map failed\n");
         return -1;
     }
 
-    /* put options into shared memory */
-    sprintf(ptr, "%d", atoi(settings[1]));
-    sprintf(ptr, "%d", atoi(settings[2]));
-    sprintf(ptr, "%d", atoi(settings[3]));
-    sprintf(ptr, "%d", atoi(settings[4]));
+    /* put start/end into shared memory */
+    
 
 
     /* add circular queue to shared memory */
@@ -101,8 +98,13 @@ int main(int argc, char** argv) {
         return producer;
     }
     else if(producer == 0) {
+        execl("./consumer", name, settings[1], settings[2], settings[4], NULL);
+
+        printf("%s\n", "exec error.");
+        exit(-1);
+    }
+    else {
         printf("%s\n", "master  : started producer");
-        execl("./producer", name, intToString(SIZE), NULL);
     }
 
 
@@ -114,8 +116,13 @@ int main(int argc, char** argv) {
         return consumer;
     }
     else if(consumer == 0 && producer != 0) {
+        execl("./consumer", name, settings[1], settings[3], settings[4], NULL);
+
+        printf("%s\n", "exec error.");
+        exit(-1);
+    }
+    else {
         printf("%s\n", "master  : started consumer");
-        execl("./consumer", name, intToString(SIZE), NULL);
     }
 
 
