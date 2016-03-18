@@ -1,11 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
 #include <sys/mman.h>
+
+#include "ibarland-utils.h"
 
 int main(int argc, char** argv) {
 
@@ -36,33 +35,37 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
-	int* head_ptr = (int*) ptr + 1;
+	int* head_ptr = (int*) ptr;
 	int* tail_ptr = head_ptr + 1;
 	int* queue = tail_ptr + 1;
 
 	int amount_ate = 1;
 
-	while(free) {
+	bool loop = true;
+	bool loop2 = true;
+
+	while(loop) {
 
 		if(*head_ptr == *tail_ptr) {
 			printf("%s\n", "consumer: shelf is empty; waiting for cookies to be baked.");
+			loop2 = true;
 
-			while(free) {
-				sleep(CONSUME_TIME / 3000);
+			while(loop2) {
+				usleep((CONSUME_TIME * 1000) / 3); // milli to micro sec then cut into a third
 
-				if(!(*head_ptr == *tail_ptr)) {
-					break;
+				if(*head_ptr != *tail_ptr) {
+					loop2 = false;
 				}
 			}
 		}
 
 		int consumption_amount =  queue[*head_ptr];
-		printf("%s %d (%d)\n", "consumer: eating cookie #", amount_ate, consumption_amount);
+		printf("%s%d (%d)\n", "consumer: eating cookie #", amount_ate, consumption_amount);
 		amount_ate = amount_ate + 1;
 
 		*head_ptr = (*head_ptr + 1) % QUEUE_SIZE;
 
-		sleep(random() % (CONSUME_TIME * 10000));
+		usleep(random() % (CONSUME_TIME * 1000));
 	}
 
 	return 0;

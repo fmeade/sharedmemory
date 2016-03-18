@@ -7,6 +7,13 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 
+/**
+ * 
+
+
+ * Help: http://stackoverflow.com/questions/1921539/using-boolean-values-in-c
+ */
+
 int main(int argc, char** argv) {
 
 	const char *NAME = argv[0];
@@ -38,30 +45,36 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
-	int* head_ptr = (int*) ptr + 1;
+	int* head_ptr = (int*) ptr;
 	int* tail_ptr = head_ptr + 1;
 	int* queue = tail_ptr + 1;
 
 	int production_amount = 1;
 
-	while(free) {
-		sleep(random() % PRODUCE_TIME);
+	typedef int bool;
+	enum { false, true };
 
-		if(*head_ptr == (*tail_ptr + 1) % QUEUE_SIZE) {
+	bool loop = true;
+	bool loop2 = true;
+
+	while(loop) {
+		usleep(random() % (PRODUCE_TIME * 1000));
+
+		if(*head_ptr == ((*tail_ptr + 1) % QUEUE_SIZE)) {
 			printf("%s\n", "producer: shelf is full; waiting for cookies to be eaten.");
 
-			while(free) {
-				sleep(PRODUCE_TIME / 3000);
+			while(loop2) {
+				usleep((PRODUCE_TIME* 1000) / 3); // milli to micro sec then cut into a third
 
-				if(!(*head_ptr == (*tail_ptr + 1) % QUEUE_SIZE)) {
-					break;
+				if(!(*head_ptr == ((*tail_ptr + 1) % QUEUE_SIZE))) {
+					loop2 = false;
 				}
 			}
 		}
 
 		int randNum = random() % 10000;
 		queue[*tail_ptr] = randNum;
-		printf("%s %d (%d)\n", "producer: baked cookie #", production_amount, randNum);
+		printf("%s%d (%d)\n", "producer: baked  cookie #", production_amount, randNum);
 		production_amount = production_amount + 1;
 
 		*tail_ptr = (*tail_ptr + 1) % QUEUE_SIZE;

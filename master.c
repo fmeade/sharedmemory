@@ -27,7 +27,9 @@
  * 
  * Shared memory -- all ints, so I'll declare it as  `int* shm`:
  *    This memory will be init'd by the master process, for the children to use:
- *      shm[0]: 
+ *      shm[0]: head of queue
+ *      shm[1]: tail of queue
+ *      shm[2]: start of queue
  */
 
 /* The possible command-line options to the program. 
@@ -149,7 +151,7 @@ int main(int argc, char** argv) {
     }
 
 
-    sleep(DURATION/1000); // ms to s
+    usleep(DURATION * 1000); // ms to micro-s
 
 
     printf("%s\n", "master  : terminating processes; bye!");
