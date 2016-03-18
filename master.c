@@ -27,11 +27,7 @@
  * 
  * Shared memory -- all ints, so I'll declare it as  `int* shm`:
  *    This memory will be init'd by the master process, for the children to use:
- *      shm[0]: queue-size
- *      shm[1]: produce-time
- *      shm[2]: consume-time
- *      shm[3]: seed
- *      shm[4]: queue-start
+ *      shm[0]: 
  */
 
 /* The possible command-line options to the program. 
@@ -52,60 +48,64 @@ int main(int argc, char** argv) {
     // Now, the array `settings` contains all the options, in order:
     // either taken from the command-line, or from the default given in `options[]`.
 
+    const int DURATION = atoi(settings[0]);
+    const int QUEUE_SIZE = atoi(settings[1]);
+    const int PRODUCE_TIME = atoi(settings[2]);
+    const int CONSUME_TIME = atoi(settings[3]);
+    int SEED;
+
     // generates a random number for the seed if not provided
     srandom(time(0));
     if (settings[4] == NULL)
-        settings[4] = intToString(random());
+        SEED = random();
+    else
+        SEED = atoi(settings[4]);
         //Now, the seed is a random integer
 
 
+
+
+
     // name and size of shared memory
-    const char *name = "fmeade-shm"; 
-    const int size = (4 + atoi(settings[1])) * sizeof(int);
+    const char *NAME = "shm_fmeade"; 
+    const int SIZE = (2 + QUEUE_SIZE) * sizeof(int);
 
     int shm_fd;
     void *ptr;
 
     /* create the shared memory segment */
-    shm_fd = shm_open(name, O_CREAT | O_RDWR, 0666);
+    shm_fd = shm_open(NAME, O_CREAT | O_RDWR, 0666);
     if (shm_fd == -1) {
         perror("creating shared memory failed\n");
         exit(-1);
     }
 
     /* configure the size of the shared memory segment */
-    ftruncate(shm_fd, size);
+    ftruncate(shm_fd, SIZE);
 
-    /* now map the shared memory segment in the address space of the process */
-    ptr = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    /* Now, map the shared memory segment in the address space of the process */
+    ptr = mmap(0, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     if (ptr == MAP_FAILED) {
         fprintf(stderr, "Map failed\n");
         return -1;
     }
 
+    int* ptr_to_head = (int*) ptr;
+    int* ptr_to_tail = ptr_to_head + 1;
+
     /* put start/end into shared memory */
-    
+    *ptr_to_head = 0;
+    *ptr_to_tail = 0;   
 
+    /* Turn ints back into chars to allow correct size to store (malloc is hard to understand)*/
+    char* queue_size_str = malloc(sizeof(int) + 1);
+    char* consume_time_str = malloc(sizeof(int) + 1);
+    char* seed_str = malloc(sizeof(int) + 1);
 
-    /* add circular queue to shared memory */
-
-
-    /* fork producer process */
-    pid_t producer = fork();
-
-    if(producer < 0) {
-        fprintf(stderr, "fork failed\n");
-        return producer;
-    }
-    else if(producer == 0) {
-        execl("./consumer", name, settings[1], settings[2], settings[4], NULL);
-
-        printf("%s\n", "exec error.");
-        exit(-1);
-    }
-    else {
-        printf("%s\n", "master  : started producer");
-    }
+    /* Put values into allocated memory */
+    sprintf(queue_size_str, "%d", QUEUE_SIZE);
+    sprintf(consume_time_str, "%d", CONSUME_TIME);
+    sprintf(seed_str, "%d", SEED);
 
 
     /* fork consumer process */
@@ -115,24 +115,53 @@ int main(int argc, char** argv) {
         fprintf(stderr, "fork failed\n");
         return consumer;
     }
-    else if(consumer == 0 && producer != 0) {
-        execl("./consumer", name, settings[1], settings[3], settings[4], NULL);
+    else if(consumer == 0) {
+        execl("./consumer", NAME, queue_size_str, consume_time_str, seed_str, NULL);
 
-        printf("%s\n", "exec error.");
+        fprintf(stderr, "exec error.");
         exit(-1);
     }
     else {
-        printf("%s\n", "master  : started consumer");
+        fprintf(stderr, "master  : started consumer");
     }
 
 
+    char* produce_time_str = malloc(sizeof(int) + 1);
 
-    sleep(atoi(settings[0])/1000); // ms to s
+    sprintf(produce_time_str, "%d", PRODUCE_TIME);
+
+    /* fork producer process */
+    pid_t producer = fork();
+
+    if(producer < 0) {
+        fprintf(stderr, "fork failed\n");
+        return consumer;
+    }
+    else if(producer == 0) {
+
+        execl("./producer", NAME, queue_size_str, produce_time_str, seed_str, NULL);
+
+        fprintf(stderr, "exec error.");
+        exit(-1);
+    }
+    else {
+        fprintf(stderr, "master  : started producer");
+    }
+
+
+    sleep(DURATION/1000); // ms to s
 
 
     printf("%s\n", "master  : terminating processes; bye!");
+
     kill(producer, SIGTERM);
     kill(consumer, SIGTERM);
+
+    /* remove the shared memory segment */
+    if (shm_unlink(NAME) == -1) {
+        printf("Error removing %s\n",NAME);
+        exit(-1);
+        }
 
     return 0;
 }
