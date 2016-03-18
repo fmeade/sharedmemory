@@ -4,12 +4,8 @@
 #include <unistd.h>
 #include <time.h>
 #include <signal.h>
-#include <sys/types.h>
 #include <fcntl.h>
-#include <sys/shm.h>
-#include <sys/stat.h>
 #include <sys/mman.h>
-
 
 #include "ibarland-utils.h"
 #include "command-line-options.h"
@@ -24,6 +20,8 @@
  * Description: Write a program which forks two child processes which communicate via shared memory. 
  *              One child (the producer) will add elements to a circular queue, and the other child 
  *              (the consumer) will process them.
+ *
+ * Help: example programs from the assignment, googled library manuals
  * 
  * Shared memory -- all ints, so I'll declare it as  `int* shm`:
  *    This memory will be init'd by the master process, for the children to use:
@@ -60,17 +58,15 @@ int main(int argc, char** argv) {
     srandom(time(0));
     if (settings[4] == NULL)
         SEED = random();
+        //Now, the seed is a random integer
     else
         SEED = atoi(settings[4]);
-        //Now, the seed is a random integer
-
-
 
 
 
     // name and size of shared memory
     const char *NAME = "shm_fmeade"; 
-    const int SIZE = (2 + QUEUE_SIZE) * sizeof(int);
+    const int SIZE = ((2 + QUEUE_SIZE) * sizeof(int));
 
     int shm_fd;
     void *ptr;
@@ -78,7 +74,7 @@ int main(int argc, char** argv) {
     /* create the shared memory segment */
     shm_fd = shm_open(NAME, O_CREAT | O_RDWR, 0666);
     if (shm_fd == -1) {
-        perror("creating shared memory failed\n");
+        perror("Failed to create shared memory.\n");
         exit(-1);
     }
 
@@ -92,22 +88,44 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    /* Gets pointers to head & tail */
     int* ptr_to_head = (int*) ptr;
     int* ptr_to_tail = ptr_to_head + 1;
 
-    /* put start/end into shared memory */
+    /* Puts head & tail into shared memory */
     *ptr_to_head = 0;
     *ptr_to_tail = 0;   
 
     /* Turn ints back into chars to allow correct size to store (malloc is hard to understand)*/
     char* queue_size_str = malloc(sizeof(int) + 1);
+    char* produce_time_str = malloc(sizeof(int) + 1);
     char* consume_time_str = malloc(sizeof(int) + 1);
     char* seed_str = malloc(sizeof(int) + 1);
 
     /* Put values into allocated memory */
     sprintf(queue_size_str, "%d", QUEUE_SIZE);
+    sprintf(produce_time_str, "%d", PRODUCE_TIME);
     sprintf(consume_time_str, "%d", CONSUME_TIME);
     sprintf(seed_str, "%d", SEED);
+    
+
+    /* fork producer process */
+    pid_t producer = fork();
+
+    if(producer < 0) {
+        fprintf(stderr, "fork failed\n");
+        return producer;
+    }
+    else if(producer == 0) {
+
+        execl("./producer", NAME, queue_size_str, produce_time_str, seed_str, NULL);
+
+        fprintf(stderr, "exec error.");
+        exit(-1);
+    }
+    else {
+        printf("%s\n", "master  : started producer");
+    }
 
 
     /* fork consumer process */
@@ -128,30 +146,7 @@ int main(int argc, char** argv) {
     }
 
 
-    char* produce_time_str = malloc(sizeof(int) + 1);
-
-    sprintf(produce_time_str, "%d", PRODUCE_TIME);
-
-    /* fork producer process */
-    pid_t producer = fork();
-
-    if(producer < 0) {
-        fprintf(stderr, "fork failed\n");
-        return consumer;
-    }
-    else if(producer == 0) {
-
-        execl("./producer", NAME, queue_size_str, produce_time_str, seed_str, NULL);
-
-        fprintf(stderr, "exec error.");
-        exit(-1);
-    }
-    else {
-        printf("%s\n", "master  : started producer");
-    }
-
-
-    usleep(DURATION * 1000); // ms to micro-s
+    usleep(DURATION * 1000); // millisecond to microsecond, then sleep
 
 
     printf("%s\n", "master  : terminating processes; bye!");
@@ -161,7 +156,7 @@ int main(int argc, char** argv) {
 
     /* remove the shared memory segment */
     if (shm_unlink(NAME) == -1) {
-        printf("Error removing %s\n",NAME);
+        printf("Error removing %s\n", NAME);
         exit(-1);
         }
 

@@ -4,7 +4,13 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
-#include "ibarland-utils.h"
+/**
+ * consumer.c
+ *
+ * Author: Forrest Meade (fmeade)
+ * 
+ * Description: Removes the oldest number from the circular queue.
+ */
 
 int main(int argc, char** argv) {
 
@@ -13,13 +19,13 @@ int main(int argc, char** argv) {
 	const int CONSUME_TIME = atoi(argv[2]);
 	const int SEED = atoi(argv[3]);
 
-	srandom(SEED + 1);
+	const int SIZE = ((2 + QUEUE_SIZE) * sizeof(int)); // head and tail index plus queue
+
+	srandom(SEED + 1); // Creates a random number pattern based on the seed
+
 
 	int shm_fd;
 	void *ptr;
-
-
-	const int SIZE = ((2 + QUEUE_SIZE) * sizeof(int));
 
 
 	shm_fd = shm_open(NAME, O_RDWR, 0666);
@@ -35,23 +41,31 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
+
+	/* Gets and stores the indexes from shared memory */
 	int* head_ptr = (int*) ptr;
 	int* tail_ptr = head_ptr + 1;
 	int* queue = tail_ptr + 1;
 
 	int amount_ate = 1;
 
+
+	typedef int bool;
+	enum { false, true };
+
 	bool loop = true;
 	bool loop2 = true;
 
+	/* Loops until master kills the process */
 	while(loop) {
 
 		if(*head_ptr == *tail_ptr) {
 			printf("%s\n", "consumer: shelf is empty; waiting for cookies to be baked.");
 			loop2 = true;
 
+			/* Loops until shelf is no longer empty */
 			while(loop2) {
-				usleep((CONSUME_TIME * 1000) / 3); // milli to micro sec then cut into a third
+				usleep((CONSUME_TIME * 1000) / 3); // millisecond to microsecond, then cut into a third
 
 				if(*head_ptr != *tail_ptr) {
 					loop2 = false;
