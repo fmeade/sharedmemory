@@ -44,13 +44,13 @@ int main(int argc, char** argv) {
 
 	int production_amount = 1;
 
-	while(1) {
+	while(free) {
 		sleep(random() % PRODUCE_TIME);
 
 		if(*head_ptr == (*tail_ptr + 1) % QUEUE_SIZE) {
 			printf("%s\n", "producer: shelf is full; waiting for cookies to be eaten.");
 
-			while(1) {
+			while(free) {
 				sleep(PRODUCE_TIME / 3000);
 
 				if(!(*head_ptr == (*tail_ptr + 1) % QUEUE_SIZE)) {

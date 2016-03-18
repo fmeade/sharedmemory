@@ -42,12 +42,12 @@ int main(int argc, char** argv) {
 
 	int amount_ate = 1;
 
-	while(1) {
+	while(free) {
 
 		if(*head_ptr == *tail_ptr) {
 			printf("%s\n", "consumer: shelf is empty; waiting for cookies to be baked.");
 
-			while(1) {
+			while(free) {
 				sleep(CONSUME_TIME / 3000);
 
 				if(!(*head_ptr == *tail_ptr)) {
@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
 
 		*head_ptr = (*head_ptr + 1) % QUEUE_SIZE;
 
-		sleep(random() % (CONSUME_TIME * 1000));
+		sleep(random() % (CONSUME_TIME * 10000));
 	}
 
 	return 0;
