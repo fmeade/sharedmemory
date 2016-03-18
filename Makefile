@@ -19,4 +19,4 @@ clean:
 	rm -f master producer consumer *.o
 
 run: master
-	./master --queue-size 3 --produce-time 100 --consume-time 75 --duration 3000
+	./master --queue-size 5 --consume-time 3000

@@ -38,6 +38,34 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
+	int* head_ptr = (int*) ptr + 1;
+	int* tail_ptr = head_ptr + 1;
+	int* queue = tail_ptr + 1;
+
+	int production_amount = 1;
+
+	while(1) {
+		sleep(random() % PRODUCE_TIME);
+
+		if(*head_ptr == (*tail_ptr + 1) % QUEUE_SIZE) {
+			printf("%s\n", "producer: shelf is full; waiting for cookies to be eaten.");
+
+			while(1) {
+				sleep(PRODUCE_TIME / 3000);
+
+				if(!(*head_ptr == (*tail_ptr + 1) % QUEUE_SIZE)) {
+					break;
+				}
+			}
+		}
+
+		int randNum = random() % 10000;
+		queue[*tail_ptr] = randNum;
+		printf("%s %d (%d)\n", "producer: baked cookie #", production_amount, randNum);
+		production_amount = production_amount + 1;
+
+		*tail_ptr = (*tail_ptr + 1) % QUEUE_SIZE;
+	}
 
 
 	return 0;

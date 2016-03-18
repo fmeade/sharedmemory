@@ -36,7 +36,34 @@ int main(int argc, char** argv) {
 		exit(-1);
 	}
 
-	
+	int* head_ptr = (int*) ptr + 1;
+	int* tail_ptr = head_ptr + 1;
+	int* queue = tail_ptr + 1;
+
+	int amount_ate = 1;
+
+	while(1) {
+
+		if(*head_ptr == *tail_ptr) {
+			printf("%s\n", "consumer: shelf is empty; waiting for cookies to be baked.");
+
+			while(1) {
+				sleep(CONSUME_TIME / 3000);
+
+				if(!(*head_ptr == *tail_ptr)) {
+					break;
+				}
+			}
+		}
+
+		int consumption_amount =  queue[*head_ptr];
+		printf("%s %d (%d)\n", "consumer: eating cookie #", amount_ate, consumption_amount);
+		amount_ate = amount_ate + 1;
+
+		*head_ptr = (*head_ptr + 1) % QUEUE_SIZE;
+
+		sleep(random() % (CONSUME_TIME * 1000));
+	}
 
 	return 0;
 }

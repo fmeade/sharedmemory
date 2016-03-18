@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
         exit(-1);
     }
     else {
-        fprintf(stderr, "master  : started consumer");
+        printf("%s\n", "master  : started consumer");
     }
 
 
@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
         exit(-1);
     }
     else {
-        fprintf(stderr, "master  : started producer");
+        printf("%s\n", "master  : started producer");
     }
 
 
